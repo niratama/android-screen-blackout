@@ -182,6 +182,7 @@ class BlackoutService : Service() {
             acquireWakeLock()
             enableExtraDimIfSupported()
             muteVolumes()
+            BlackoutTileService.updateTile(this)
         } catch (e: Exception) {
             Log.e(TAG, "Failed to add blackout overlay", e)
             stopSelf()
@@ -288,6 +289,7 @@ class BlackoutService : Service() {
         releaseWakeLock()
         restoreExtraDimIfModified()
         restoreVolumes()
+        BlackoutTileService.updateTile(this)
         val view = blackoutView
         if (view != null) {
             try {

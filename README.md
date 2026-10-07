@@ -62,6 +62,15 @@ adb shell am broadcast -a jp.poi.screenblackout.ACTION_TOGGLE -n jp.poi.screenbl
 
 ---
 
+## クイック設定タイル (Quick Settings Tile)
+画面上部からスワイプして表示されるクイック設定パネルに、黒幕ON用タイルを追加できます。
+1. 通知バーを2回引き下げてクイック設定パネルを開く
+2. 編集（鉛筆アイコン）をタップ
+3. 下部のタイル候補から **「ScreenBlackout」** を上部のアクティブエリアにドラッグ＆ドロップして配置
+4. ワンタップで黒幕を即座にONにできます（解除は画面ダブルタップで可能）
+
+---
+
 ## MacroDroid 設定例
 
 ### 方法 1: 「アクティビティを起動」を使う場合（推奨・簡単）

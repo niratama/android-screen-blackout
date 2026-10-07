@@ -5,4 +5,5 @@
     <string name="notification_title">Screen Blackout Active</string>
     <string name="notification_text">Double-tap the screen or tap here to dismiss</string>
     <string name="overlay_permission_required">Please grant Overlay permission to enable ScreenBlackout</string>
+    <string name="tile_label">ScreenBlackout</string>
 </resources>
