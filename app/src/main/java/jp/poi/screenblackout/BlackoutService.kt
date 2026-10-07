@@ -12,6 +12,7 @@ import android.graphics.PixelFormat
 import android.media.AudioManager
 import android.os.Build
 import android.os.IBinder
+import android.os.PowerManager
 import android.provider.Settings
 import android.util.Log
 import android.view.GestureDetector
@@ -40,6 +41,7 @@ class BlackoutService : Service() {
     private var blackoutView: View? = null
     private var wasExtraDimEnabledInitially: Boolean? = null
     private val savedVolumes = mutableMapOf<Int, Int>()
+    private var wakeLock: PowerManager.WakeLock? = null
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -157,7 +159,8 @@ class BlackoutService : Service() {
             WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
             WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
                 WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
-                WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+                WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS or
+                WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON,
             PixelFormat.OPAQUE
         ).apply {
             gravity = Gravity.FILL
@@ -168,17 +171,51 @@ class BlackoutService : Service() {
             }
         }
 
+        // View側でも画面点灯維持フラグをセット
+        view.keepScreenOn = true
+
         try {
             windowManager.addView(view, params)
             blackoutView = view
             isRunning = true
             Log.d(TAG, "Blackout overlay successfully added to WindowManager")
+            acquireWakeLock()
             enableExtraDimIfSupported()
             muteVolumes()
         } catch (e: Exception) {
             Log.e(TAG, "Failed to add blackout overlay", e)
             stopSelf()
         }
+    }
+
+    private fun acquireWakeLock() {
+        try {
+            val powerManager = getSystemService(Context.POWER_SERVICE) as? PowerManager
+            wakeLock = powerManager?.newWakeLock(
+                PowerManager.PARTIAL_WAKE_LOCK,
+                "ScreenBlackout:WakeLock"
+            )?.apply {
+                setReferenceCounted(false)
+                acquire(12 * 60 * 60 * 1000L) // 最大12時間の安全タイムアウト
+                Log.i(TAG, "WakeLock acquired successfully")
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to acquire WakeLock", e)
+        }
+    }
+
+    private fun releaseWakeLock() {
+        try {
+            wakeLock?.let {
+                if (it.isHeld) {
+                    it.release()
+                    Log.i(TAG, "WakeLock released")
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to release WakeLock", e)
+        }
+        wakeLock = null
     }
 
     private fun muteVolumes() {
@@ -248,6 +285,7 @@ class BlackoutService : Service() {
     override fun onDestroy() {
         super.onDestroy()
         isRunning = false
+        releaseWakeLock()
         restoreExtraDimIfModified()
         restoreVolumes()
         val view = blackoutView
