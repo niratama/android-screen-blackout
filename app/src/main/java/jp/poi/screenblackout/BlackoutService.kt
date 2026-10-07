@@ -9,6 +9,7 @@ import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.graphics.Color
 import android.graphics.PixelFormat
+import android.media.AudioManager
 import android.os.Build
 import android.os.IBinder
 import android.provider.Settings
@@ -38,6 +39,7 @@ class BlackoutService : Service() {
     private lateinit var windowManager: WindowManager
     private var blackoutView: View? = null
     private var wasExtraDimEnabledInitially: Boolean? = null
+    private val savedVolumes = mutableMapOf<Int, Int>()
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -172,10 +174,45 @@ class BlackoutService : Service() {
             isRunning = true
             Log.d(TAG, "Blackout overlay successfully added to WindowManager")
             enableExtraDimIfSupported()
+            muteVolumes()
         } catch (e: Exception) {
             Log.e(TAG, "Failed to add blackout overlay", e)
             stopSelf()
         }
+    }
+
+    private fun muteVolumes() {
+        val audioManager = getSystemService(Context.AUDIO_SERVICE) as? AudioManager ?: return
+        val streamsToMute = intArrayOf(
+            AudioManager.STREAM_MUSIC,
+            AudioManager.STREAM_SYSTEM
+        )
+        savedVolumes.clear()
+        for (stream in streamsToMute) {
+            try {
+                val current = audioManager.getStreamVolume(stream)
+                savedVolumes[stream] = current
+                if (current > 0) {
+                    audioManager.setStreamVolume(stream, 0, 0)
+                    Log.i(TAG, "Muted audio stream $stream (was $current)")
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to mute audio stream $stream", e)
+            }
+        }
+    }
+
+    private fun restoreVolumes() {
+        val audioManager = getSystemService(Context.AUDIO_SERVICE) as? AudioManager ?: return
+        for ((stream, originalVolume) in savedVolumes) {
+            try {
+                audioManager.setStreamVolume(stream, originalVolume, 0)
+                Log.i(TAG, "Restored audio stream $stream to $originalVolume")
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to restore audio stream $stream to $originalVolume", e)
+            }
+        }
+        savedVolumes.clear()
     }
 
     private fun enableExtraDimIfSupported() {
@@ -212,6 +249,7 @@ class BlackoutService : Service() {
         super.onDestroy()
         isRunning = false
         restoreExtraDimIfModified()
+        restoreVolumes()
         val view = blackoutView
         if (view != null) {
             try {
