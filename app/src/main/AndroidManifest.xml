@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <application
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.ScreenBlackout">
+
+        <!-- 起動・トグル用透明Activity -->
+        <activity
+            android:name=".ToggleActivity"
+            android:exported="true"
+            android:theme="@android:style/Theme.NoDisplay">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- バックグラウンド黒幕描画サービス -->
+        <service
+            android:name=".BlackoutService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Overlay screen to prevent screen burn and mis-taps" />
+        </service>
+
+        <!-- MacroDroid等連携用ブロードキャストレシーバー -->
+        <receiver
+            android:name=".BlackoutReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.example.screenblackout.ACTION_ON" />
+                <action android:name="com.example.screenblackout.ACTION_OFF" />
+                <action android:name="com.example.screenblackout.ACTION_TOGGLE" />
+            </intent-filter>
+        </receiver>
+
+    </application>
+
+</manifest>

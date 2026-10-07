@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">ScreenBlackout</string>
+    <string name="notification_channel_name">Screen Blackout</string>
+    <string name="notification_channel_desc">Screen Blackout service is active</string>
+    <string name="notification_title">Screen Blackout Active</string>
+    <string name="notification_text">Double-tap the screen or tap here to dismiss</string>
+    <string name="overlay_permission_required">Please grant Overlay permission to enable ScreenBlackout</string>
+</resources>
