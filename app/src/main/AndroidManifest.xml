@@ -42,9 +42,9 @@
             android:enabled="true"
             android:exported="true">
             <intent-filter>
-                <action android:name="com.example.screenblackout.ACTION_ON" />
-                <action android:name="com.example.screenblackout.ACTION_OFF" />
-                <action android:name="com.example.screenblackout.ACTION_TOGGLE" />
+                <action android:name="jp.poi.screenblackout.ACTION_ON" />
+                <action android:name="jp.poi.screenblackout.ACTION_OFF" />
+                <action android:name="jp.poi.screenblackout.ACTION_TOGGLE" />
             </intent-filter>
         </receiver>
 

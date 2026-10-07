@@ -36,22 +36,22 @@ adb install -r app-debug.apk
 ### 2. 権限付与（オーバーレイ & 通知）
 ```bash
 # 「他のアプリの上に重ねて表示」権限
-adb shell appops set com.example.screenblackout SYSTEM_ALERT_WINDOW allow
+adb shell appops set jp.poi.screenblackout SYSTEM_ALERT_WINDOW allow
 
 # 通知権限 (Android 13+)
-adb shell pm grant com.example.screenblackout android.permission.POST_NOTIFICATIONS
+adb shell pm grant jp.poi.screenblackout android.permission.POST_NOTIFICATIONS
 ```
 
 ### 3. 操作コマンド (Broadcast)
 ```bash
 # 黒幕 ON
-adb shell am broadcast -a com.example.screenblackout.ACTION_ON -n com.example.screenblackout/.BlackoutReceiver
+adb shell am broadcast -a jp.poi.screenblackout.ACTION_ON -n jp.poi.screenblackout/.BlackoutReceiver
 
 # 黒幕 OFF
-adb shell am broadcast -a com.example.screenblackout.ACTION_OFF -n com.example.screenblackout/.BlackoutReceiver
+adb shell am broadcast -a jp.poi.screenblackout.ACTION_OFF -n jp.poi.screenblackout/.BlackoutReceiver
 
 # トグル (状態反転)
-adb shell am broadcast -a com.example.screenblackout.ACTION_TOGGLE -n com.example.screenblackout/.BlackoutReceiver
+adb shell am broadcast -a jp.poi.screenblackout.ACTION_TOGGLE -n jp.poi.screenblackout/.BlackoutReceiver
 ```
 
 ---
@@ -59,6 +59,6 @@ adb shell am broadcast -a com.example.screenblackout.ACTION_TOGGLE -n com.exampl
 ## MacroDroid 設定例
 - **アクション:** 「インテントを送信」
 - **ターゲット:** Broadcast (ブロードキャスト)
-- **アクション名:** `com.example.screenblackout.ACTION_ON` (または `ACTION_OFF`, `ACTION_TOGGLE`)
-- **パッケージ名:** `com.example.screenblackout`
-- **クラス名:** `com.example.screenblackout.BlackoutReceiver`
+- **アクション名:** `jp.poi.screenblackout.ACTION_ON` (または `ACTION_OFF`, `ACTION_TOGGLE`)
+- **パッケージ名:** `jp.poi.screenblackout`
+- **クラス名:** `jp.poi.screenblackout.BlackoutReceiver`

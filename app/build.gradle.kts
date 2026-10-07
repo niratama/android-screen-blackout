@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.screenblackout"
+    namespace = "jp.poi.screenblackout"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.example.screenblackout"
+        applicationId = "jp.poi.screenblackout"
         minSdk = 26
         targetSdk = 34
         versionCode = 1

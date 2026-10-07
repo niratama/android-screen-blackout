@@ -1,4 +1,4 @@
-package com.example.screenblackout
+package jp.poi.screenblackout
 
 import android.app.Activity
 import android.content.Intent

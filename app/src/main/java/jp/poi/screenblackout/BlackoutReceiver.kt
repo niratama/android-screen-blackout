@@ -1,4 +1,4 @@
-package com.example.screenblackout
+package jp.poi.screenblackout
 
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -10,9 +10,9 @@ import android.util.Log
 class BlackoutReceiver : BroadcastReceiver() {
 
     companion object {
-        const val ACTION_ON = "com.example.screenblackout.ACTION_ON"
-        const val ACTION_OFF = "com.example.screenblackout.ACTION_OFF"
-        const val ACTION_TOGGLE = "com.example.screenblackout.ACTION_TOGGLE"
+        const val ACTION_ON = "jp.poi.screenblackout.ACTION_ON"
+        const val ACTION_OFF = "jp.poi.screenblackout.ACTION_OFF"
+        const val ACTION_TOGGLE = "jp.poi.screenblackout.ACTION_TOGGLE"
 
         private const val TAG = "BlackoutReceiver"
     }

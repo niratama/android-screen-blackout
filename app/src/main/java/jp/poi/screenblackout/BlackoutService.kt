@@ -1,4 +1,4 @@
-package com.example.screenblackout
+package jp.poi.screenblackout
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -23,8 +23,8 @@ import androidx.core.app.NotificationCompat
 class BlackoutService : Service() {
 
     companion object {
-        const val ACTION_START = "com.example.screenblackout.ACTION_START"
-        const val ACTION_STOP = "com.example.screenblackout.ACTION_STOP"
+        const val ACTION_START = "jp.poi.screenblackout.ACTION_START"
+        const val ACTION_STOP = "jp.poi.screenblackout.ACTION_STOP"
 
         private const val CHANNEL_ID = "screen_blackout_channel"
         private const val NOTIFICATION_ID = 1001
