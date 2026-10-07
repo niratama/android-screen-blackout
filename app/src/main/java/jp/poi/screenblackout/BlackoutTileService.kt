@@ -51,33 +51,46 @@ class BlackoutTileService : TileService() {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK
             }
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-                val pendingIntent = PendingIntent.getActivity(
-                    this,
-                    0,
-                    permissionIntent,
-                    PendingIntent.FLAG_IMMUTABLE
-                )
-                startActivityAndCollapse(pendingIntent)
-            } else {
-                @Suppress("DEPRECATION")
-                startActivityAndCollapse(permissionIntent)
-            }
+            collapseAndLaunch(permissionIntent)
             return
         }
 
-        // 黒幕を開始（すでに起動中の場合はそのまま維持または同期）
+        // 1. 黒幕サービスを即座に開始
         val serviceIntent = Intent(this, BlackoutService::class.java).apply {
             action = BlackoutService.ACTION_START
         }
-
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             startForegroundService(serviceIntent)
         } else {
             startService(serviceIntent)
         }
 
+        // 2. クイック設定パネルを自動で閉じる（collapse）
+        val onIntent = Intent(this, BlackoutOnActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        }
+        collapseAndLaunch(onIntent)
+
         updateTileState()
+    }
+
+    private fun collapseAndLaunch(intent: Intent) {
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                val pendingIntent = PendingIntent.getActivity(
+                    this,
+                    0,
+                    intent,
+                    PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+                )
+                startActivityAndCollapse(pendingIntent)
+            } else {
+                @Suppress("DEPRECATION")
+                startActivityAndCollapse(intent)
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to collapse QS panel", e)
+        }
     }
 
     private fun updateTileState() {
