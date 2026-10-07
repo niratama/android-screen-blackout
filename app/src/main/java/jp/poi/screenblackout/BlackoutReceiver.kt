@@ -32,9 +32,8 @@ class BlackoutReceiver : BroadcastReceiver() {
                 }
             }
             ACTION_OFF -> {
-                if (BlackoutService.isRunning) {
-                    stopBlackout(context)
-                }
+                Log.i(TAG, "Stopping blackout unconditionally")
+                stopBlackout(context)
             }
             ACTION_TOGGLE -> {
                 if (BlackoutService.isRunning) {
@@ -62,9 +61,8 @@ class BlackoutReceiver : BroadcastReceiver() {
     }
 
     private fun stopBlackout(context: Context) {
-        val serviceIntent = Intent(context, BlackoutService::class.java).apply {
-            action = BlackoutService.ACTION_STOP
-        }
-        context.startService(serviceIntent)
+        // バックグラウンド制限を受けない直接のstopServiceで確実に停止
+        val serviceIntent = Intent(context, BlackoutService::class.java)
+        context.stopService(serviceIntent)
     }
 }

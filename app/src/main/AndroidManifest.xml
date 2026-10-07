@@ -25,6 +25,18 @@
             </intent-filter>
         </activity>
 
+        <!-- ON専用透明Activity (MacroDroidアクティビティ起動用) -->
+        <activity
+            android:name=".BlackoutOnActivity"
+            android:exported="true"
+            android:theme="@android:style/Theme.NoDisplay" />
+
+        <!-- OFF専用透明Activity (MacroDroidアクティビティ起動用) -->
+        <activity
+            android:name=".BlackoutOffActivity"
+            android:exported="true"
+            android:theme="@android:style/Theme.NoDisplay" />
+
         <!-- バックグラウンド黒幕描画サービス -->
         <service
             android:name=".BlackoutService"

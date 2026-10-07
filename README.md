@@ -57,6 +57,14 @@ adb shell am broadcast -a jp.poi.screenblackout.ACTION_TOGGLE -n jp.poi.screenbl
 ---
 
 ## MacroDroid 設定例
+
+### 方法 1: 「アクティビティを起動」を使う場合（推奨・簡単）
+アクション追加 → **「アプリ」** → **「アクティビティを起動」** から、以下を選択するだけで制御できます。
+- `jp.poi.screenblackout.BlackoutOnActivity` : 黒幕 ON
+- `jp.poi.screenblackout.BlackoutOffActivity` : 黒幕 OFF
+- `jp.poi.screenblackout.ToggleActivity` : トグル (反転)
+
+### 方法 2: 「インテントを送信」を使う場合
 - **アクション:** 「インテントを送信」
 - **ターゲット:** Broadcast (ブロードキャスト)
 - **アクション名:** `jp.poi.screenblackout.ACTION_ON` (または `ACTION_OFF`, `ACTION_TOGGLE`)
