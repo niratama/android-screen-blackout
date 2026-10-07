@@ -37,6 +37,7 @@ class BlackoutService : Service() {
 
     private lateinit var windowManager: WindowManager
     private var blackoutView: View? = null
+    private var wasExtraDimEnabledInitially: Boolean? = null
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -158,6 +159,7 @@ class BlackoutService : Service() {
             PixelFormat.OPAQUE
         ).apply {
             gravity = Gravity.FILL
+            screenBrightness = 0.0f // バックライト輝度を最小値に設定（解除時に自動復帰）
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                 layoutInDisplayCutoutMode =
                     WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
@@ -169,15 +171,47 @@ class BlackoutService : Service() {
             blackoutView = view
             isRunning = true
             Log.d(TAG, "Blackout overlay successfully added to WindowManager")
+            enableExtraDimIfSupported()
         } catch (e: Exception) {
             Log.e(TAG, "Failed to add blackout overlay", e)
             stopSelf()
         }
     }
 
+    private fun enableExtraDimIfSupported() {
+        try {
+            val result = Settings.Secure.putInt(
+                contentResolver,
+                "reduce_bright_colors_activated",
+                1
+            )
+            Log.d(TAG, "Extra Dim enabled successfully (result=$result)")
+        } catch (e: SecurityException) {
+            Log.w(TAG, "WRITE_SECURE_SETTINGS not granted. Skipping Extra Dim control.")
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to enable Extra Dim", e)
+        }
+    }
+
+    private fun restoreExtraDimIfModified() {
+        try {
+            val result = Settings.Secure.putInt(
+                contentResolver,
+                "reduce_bright_colors_activated",
+                0
+            )
+            Log.d(TAG, "Extra Dim restored to normal (OFF) (result=$result)")
+        } catch (e: SecurityException) {
+            Log.w(TAG, "WRITE_SECURE_SETTINGS not granted. Skipping Extra Dim restore.")
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to restore Extra Dim setting", e)
+        }
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         isRunning = false
+        restoreExtraDimIfModified()
         val view = blackoutView
         if (view != null) {
             try {

@@ -33,13 +33,16 @@ Android向け軽量画面暗転ユーティリティアプリ。
 adb install -r app-debug.apk
 ```
 
-### 2. 権限付与（オーバーレイ & 通知）
+### 2. 権限付与（オーバーレイ & 通知 & Extra Dim）
 ```bash
 # 「他のアプリの上に重ねて表示」権限
 adb shell appops set jp.poi.screenblackout SYSTEM_ALERT_WINDOW allow
 
 # 通知権限 (Android 13+)
 adb shell pm grant jp.poi.screenblackout android.permission.POST_NOTIFICATIONS
+
+# Extra Dim（さらに輝度を下げる）制御用特権（オプション・LCD端末推奨）
+adb shell pm grant jp.poi.screenblackout android.permission.WRITE_SECURE_SETTINGS
 ```
 
 ### 3. 操作コマンド (Broadcast)
