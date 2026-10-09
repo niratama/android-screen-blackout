@@ -13,6 +13,7 @@ Android向け軽量画面暗転ユーティリティアプリ。
 - **明るさ自動調節の強制停止 ＆ システム輝度0 ＆ Extra Dim最大化:** 暗所での環境光センサーによる自動昇光を完全遮断。システム輝度を0に落とし、Extra Dimを最大強度（100%）にブースト（LCDの光漏れを極限まで低減）。解除時に元の明るさ・自動調節モードへ自動復帰。
 - **音量の自動ミュート & 自動復元:** 黒幕ON時にメディア・システム音量を保存して0（消音）にし、解除時に元の音量レベルへ自動復元。
 - **画面消灯・スリープ自動抑止:** 黒幕ON中は `FLAG_KEEP_SCREEN_ON` と `WakeLock` により端末のタイムアウトによる画面消灯・CPUスリープを防止（背後ゲームの常時稼働を維持）。解除時に通常スリープに復帰。
+- **音量UPボタンのダブルクリック（2回連続押し）で直接ON/OFFトグル:** MacroDroid不要！音量アップキーを350ms以内に素早く2回押すと、バックグラウンドから直接黒幕をトグル（ON/OFF）。ダブルクリック時は音量変更バーの表示をブロックし、バイブレーションで触覚フィードバックを返します。
 - **自動化アプリ連携 (MacroDroid / ADB):** BroadcastIntent または アクティビティ起動で ON/OFF/TOGGLE を制御可能。
 
 ---
@@ -48,7 +49,16 @@ adb shell pm grant jp.poi.screenblackout android.permission.POST_NOTIFICATIONS
 adb shell pm grant jp.poi.screenblackout android.permission.WRITE_SECURE_SETTINGS
 ```
 
-### 3. 操作コマンド (Broadcast)
+### 3. 音量キーダブルクリック機能の有効化（ユーザー補助サービス）
+端末の「設定」→「ユーザー補助」→「インストール済みのアプリ」→「ScreenBlackout」をONにするか、以下のコマンドで一発有効化できます：
+```bash
+# ユーザー補助サービスを有効化（既存のサービス設定を維持して追加）
+CURRENT=$(adb shell settings get secure enabled_accessibility_services)
+adb shell settings put secure enabled_accessibility_services "${CURRENT}:jp.poi.screenblackout/.BlackoutAutomationService"
+adb shell settings put secure accessibility_enabled 1
+```
+
+### 4. 操作コマンド (Broadcast)
 ```bash
 # 黒幕 ON
 adb shell am broadcast -a jp.poi.screenblackout.ACTION_ON -n jp.poi.screenblackout/.BlackoutReceiver
