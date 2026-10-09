@@ -40,6 +40,8 @@ class BlackoutService : Service() {
     private lateinit var windowManager: WindowManager
     private var blackoutView: View? = null
     private var wasExtraDimEnabledInitially: Boolean? = null
+    private var originalBrightnessMode: Int? = null
+    private var originalBrightness: Int? = null
     private val savedVolumes = mutableMapOf<Int, Int>()
     private var wakeLock: PowerManager.WakeLock? = null
 
@@ -180,7 +182,7 @@ class BlackoutService : Service() {
             isRunning = true
             Log.d(TAG, "Blackout overlay successfully added to WindowManager")
             acquireWakeLock()
-            enableExtraDimIfSupported()
+            applyMaximumDimming()
             muteVolumes()
             BlackoutTileService.updateTile(this)
         } catch (e: Exception) {
@@ -253,41 +255,116 @@ class BlackoutService : Service() {
         savedVolumes.clear()
     }
 
-    private fun enableExtraDimIfSupported() {
+    private fun applyMaximumDimming() {
+        // 1. システムの明るさ自動調節をOFFにし、システム輝度を0にする
         try {
-            val result = Settings.Secure.putInt(
+            val mode = Settings.System.getInt(
+                contentResolver,
+                Settings.System.SCREEN_BRIGHTNESS_MODE,
+                Settings.System.SCREEN_BRIGHTNESS_MODE_MANUAL
+            )
+            originalBrightnessMode = mode
+
+            val brightness = Settings.System.getInt(
+                contentResolver,
+                Settings.System.SCREEN_BRIGHTNESS,
+                128
+            )
+            originalBrightness = brightness
+
+            if (mode == Settings.System.SCREEN_BRIGHTNESS_MODE_AUTOMATIC) {
+                Settings.System.putInt(
+                    contentResolver,
+                    Settings.System.SCREEN_BRIGHTNESS_MODE,
+                    Settings.System.SCREEN_BRIGHTNESS_MODE_MANUAL
+                )
+                Log.i(TAG, "Disabled adaptive brightness (SCREEN_BRIGHTNESS_MODE_MANUAL)")
+            }
+
+            Settings.System.putInt(
+                contentResolver,
+                Settings.System.SCREEN_BRIGHTNESS,
+                0
+            )
+            Log.i(TAG, "Set system screen brightness to 0 (was $brightness)")
+        } catch (e: Exception) {
+            Log.w(TAG, "Could not adjust system brightness/mode (requires WRITE_SETTINGS/WRITE_SECURE_SETTINGS)", e)
+        }
+
+        // 2. Extra Dim を有効化し、強度を最大（100%）にブースト
+        try {
+            val activatedResult = Settings.Secure.putInt(
                 contentResolver,
                 "reduce_bright_colors_activated",
                 1
             )
-            Log.d(TAG, "Extra Dim enabled successfully (result=$result)")
+            val levelResult = Settings.Secure.putInt(
+                contentResolver,
+                "reduce_bright_colors_level",
+                100
+            )
+            Log.i(TAG, "Extra Dim enabled (result=$activatedResult) & level set to 100% (result=$levelResult)")
         } catch (e: SecurityException) {
             Log.w(TAG, "WRITE_SECURE_SETTINGS not granted. Skipping Extra Dim control.")
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to enable Extra Dim", e)
+            Log.e(TAG, "Failed to apply Extra Dim settings", e)
         }
     }
 
-    private fun restoreExtraDimIfModified() {
+    private fun restoreBrightnessAndDimming() {
+        // 1. Extra Dim の復元
         try {
             val result = Settings.Secure.putInt(
                 contentResolver,
                 "reduce_bright_colors_activated",
                 0
             )
-            Log.d(TAG, "Extra Dim restored to normal (OFF) (result=$result)")
+            Settings.Secure.putInt(
+                contentResolver,
+                "reduce_bright_colors_level",
+                50
+            )
+            Log.i(TAG, "Extra Dim restored to normal (OFF, level 50%) (result=$result)")
         } catch (e: SecurityException) {
             Log.w(TAG, "WRITE_SECURE_SETTINGS not granted. Skipping Extra Dim restore.")
         } catch (e: Exception) {
             Log.e(TAG, "Failed to restore Extra Dim setting", e)
         }
+
+        // 2. システム輝度と自動調節モードの復元
+        try {
+            originalBrightness?.let { prevBrightness ->
+                Settings.System.putInt(
+                    contentResolver,
+                    Settings.System.SCREEN_BRIGHTNESS,
+                    prevBrightness
+                )
+                Log.i(TAG, "Restored system screen brightness to $prevBrightness")
+            }
+
+            originalBrightnessMode?.let { prevMode ->
+                if (prevMode == Settings.System.SCREEN_BRIGHTNESS_MODE_AUTOMATIC) {
+                    Settings.System.putInt(
+                        contentResolver,
+                        Settings.System.SCREEN_BRIGHTNESS_MODE,
+                        Settings.System.SCREEN_BRIGHTNESS_MODE_AUTOMATIC
+                    )
+                    Log.i(TAG, "Restored adaptive brightness mode (AUTOMATIC)")
+                }
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to restore system brightness settings", e)
+        }
+
+        originalBrightnessMode = null
+        originalBrightness = null
     }
 
     override fun onDestroy() {
         super.onDestroy()
         isRunning = false
         releaseWakeLock()
-        restoreExtraDimIfModified()
+        restoreBrightnessAndDimming()
         restoreVolumes()
         BlackoutTileService.updateTile(this)
         val view = blackoutView
