@@ -13,9 +13,11 @@ import android.media.AudioManager
 import android.os.Build
 import android.os.IBinder
 import android.os.PowerManager
+import android.os.VibrationEffect
+import android.os.Vibrator
+import android.os.VibratorManager
 import android.provider.Settings
 import android.util.Log
-import android.view.GestureDetector
 import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
@@ -127,21 +129,13 @@ class BlackoutService : Service() {
             setBackgroundColor(Color.BLACK)
         }
 
-        val gestureDetector = GestureDetector(this, object : GestureDetector.SimpleOnGestureListener() {
-            override fun onDown(e: MotionEvent): Boolean {
-                return true
-            }
-
-            override fun onDoubleTap(e: MotionEvent): Boolean {
-                Log.d(TAG, "Double tap detected, dismissing blackout overlay")
-                stopSelf()
-                return true
-            }
-        })
-
-        // タッチイベントを消費し、背後アプリへの誤タップを遮断
+        // 4本指タップ（マルチタッチ）で解除。1〜3本指のタッチイベントは消費して背後アプリへの誤タップを遮断
         view.setOnTouchListener { _, event ->
-            gestureDetector.onTouchEvent(event)
+            if (event.pointerCount >= 4) {
+                Log.i(TAG, "4-finger touch detected (pointerCount=${event.pointerCount}), dismissing blackout overlay")
+                vibrateDismissFeedback()
+                stopSelf()
+            }
             true
         }
 
@@ -188,6 +182,27 @@ class BlackoutService : Service() {
         } catch (e: Exception) {
             Log.e(TAG, "Failed to add blackout overlay", e)
             stopSelf()
+        }
+    }
+
+    private fun vibrateDismissFeedback() {
+        try {
+            val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                val vm = getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as? VibratorManager
+                vm?.defaultVibrator
+            } else {
+                @Suppress("DEPRECATION")
+                getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                val timings = longArrayOf(0, 50, 40, 50)
+                vibrator?.vibrate(VibrationEffect.createWaveform(timings, -1))
+            } else {
+                @Suppress("DEPRECATION")
+                vibrator?.vibrate(longArrayOf(0, 50, 40, 50), -1)
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Vibrate feedback failed", e)
         }
     }
 
